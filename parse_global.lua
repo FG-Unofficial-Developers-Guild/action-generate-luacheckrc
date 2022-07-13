@@ -225,6 +225,8 @@ local function findInterfaceScripts(packageDefinitions, templates, xmlFiles, pac
 					end
 				elseif script and script.children[1] and script.children[1].text then
 					getFnsFromLuaInXml(fns, script.children[1].text)
+				elseif script and not script.children[1] then
+					print('error at ' .. parent.attrs.name)
 				end
 
 				packageDefinitions[parent.attrs.name] = fns
