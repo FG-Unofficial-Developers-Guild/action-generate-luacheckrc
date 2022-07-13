@@ -223,7 +223,7 @@ local function findInterfaceScripts(packageDefinitions, templates, xmlFiles, pac
 					if not findGlobals(fns, table.concat(packagePath) .. '/' .. script.attrs.file) then
 						findAltScriptLocation(fns, packagePath, script.attrs.file)
 					end
-				elseif script and script.children[1].text then
+				elseif script and script.children[1] and script.children[1].text then
 					getFnsFromLuaInXml(fns, script.children[1].text)
 				end
 
