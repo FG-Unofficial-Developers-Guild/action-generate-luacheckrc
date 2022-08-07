@@ -137,8 +137,8 @@ local function writeDefinitionsToFile(defintitions, package, version)
 	-- Rewrite definitions in format of lucheckrc, add to output, and sort output.
 	local function gatherChildFunctions(output)
 
-		-- Remove hyphens and spaces from provided string and return it.
-		local function simpleName(string) return string:gsub('[%- ]', '_') end
+		-- Change hyphens and whitespace characters in provided string to underscores.
+		local function simpleName(string) return string:gsub('[%-%s]', '_') end
 
 		-- Rewrite child functions of script/object definitions in format of luacheckrc and return.
 		local function writeSubdefintions(fns)
@@ -343,9 +343,10 @@ local function getPackageName(baseXmlFile, packageName)
 
 	-- Trims package name to prevent issues with luacheckrc
 	local function simplifyText(text)
-		text = text:gsub('.*:%s', '') -- remove prefix
-		text = text:gsub(',.*', '') -- shorten name
-		text = text:gsub('%(.*%)', '') -- remove parenthetical
+		text = text:gsub('%a+:%s+', '') -- remove "Feature: ", "Theme: ", etc
+		text = text:gsub(',.*', '') -- only use first value in a CSV list
+		text = text:gsub('%(.*%)', '') -- remove parentheticals
+		text = text:gsub('%[.*%]', '') -- remove bracketed tags
 		text = text:gsub('%W', '') -- remove non alphanumeric
 		return text
 	end
