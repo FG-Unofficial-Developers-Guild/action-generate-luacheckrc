@@ -346,6 +346,7 @@ local function getPackageName(baseXmlFile, packageName)
 		text = text:gsub('%a+:%s+', '') -- remove "Feature: ", "Theme: ", etc
 		text = text:gsub("'", '') -- remove apostophes
 		text = text:gsub('[^%w%s].*', '') -- remove non alphanumeric and any following characters
+		text = text:gsub('%W', '') -- remove non alphanumeric
 		return text
 	end
 
