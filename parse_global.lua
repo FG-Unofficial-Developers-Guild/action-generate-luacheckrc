@@ -344,10 +344,8 @@ local function getPackageName(baseXmlFile, packageName)
 	-- Trims package name to prevent issues with luacheckrc
 	local function simplifyText(text)
 		text = text:gsub('%a+:%s+', '') -- remove "Feature: ", "Theme: ", etc
-		text = text:gsub(',.*', '') -- only use first value in a CSV list
-		text = text:gsub('%(.*%)', '') -- remove parentheticals
-		text = text:gsub('%[.*%]', '') -- remove bracketed tags
-		text = text:gsub('%W', '') -- remove non alphanumeric
+		text = text:gsub("'", '') -- remove apostophes
+		text = text:gsub('%W.*', '') -- remove non alphanumeric and any following characters
 		return text
 	end
 
