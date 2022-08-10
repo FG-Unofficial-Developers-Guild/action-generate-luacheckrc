@@ -307,8 +307,12 @@ local function findTemplateRelationships(templates, packagePath, xmlFiles)
 
 	for _, xmlPath in pairs(xmlFiles) do
 		local root = findXmlElement(parseXmlFile(xmlPath), { 'root' })
-		for _, element in ipairs(root.children) do
-			if element.tag == 'template' then for _, template in ipairs(element.children) do findTemplateScript(template, element) end end
+		if root then
+			for _, element in ipairs(root.children) do
+				if element.tag == 'template' then for _, template in ipairs(element.children) do findTemplateScript(template, element) end end
+			end
+		else
+			print('error at ' .. xmlPath)
 		end
 	end
 end
