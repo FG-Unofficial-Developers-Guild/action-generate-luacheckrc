@@ -198,7 +198,11 @@ local function findNamedLuaScripts(definitions, baseXmlFile, packagePath)
 	end
 
 	local root = findXmlElement(parseXmlFile(baseXmlFile), { 'root' })
-	if root then for _, element in ipairs(root.children) do recursiveScriptSearch(element) end end
+	if root and root.children then
+		for _, element in ipairs(root.children) do recursiveScriptSearch(element) end
+	else
+		print('error at ' .. baseXmlFile)
+	end
 end
 
 -- Searches a provided table of XML files for script definitions.
@@ -307,7 +311,7 @@ local function findTemplateRelationships(templates, packagePath, xmlFiles)
 
 	for _, xmlPath in pairs(xmlFiles) do
 		local root = findXmlElement(parseXmlFile(xmlPath), { 'root' })
-		if root then
+		if root and root.children then
 			for _, element in ipairs(root.children) do
 				if element.tag == 'template' then for _, template in ipairs(element.children) do findTemplateScript(template, element) end end
 			end
@@ -333,10 +337,12 @@ local function findXmls(xmlFiles, xmlDefinitionsPath, packagePath)
 	end
 
 	local root = findXmlElement(parseXmlFile(xmlDefinitionsPath), { 'root' }) -- use first root element
-	if root then
+	if root and root.children then
 		for _, element in ipairs(root.children) do
 			if not addXmlToTable(element) then for _, child in ipairs(element.children) do addXmlToTable(child) end end
 		end
+	else
+		print('error at ' .. xmlDefinitionsPath)
 	end
 end
 
