@@ -266,12 +266,16 @@ local function findInterfaceScripts(packageDefinitions, templates, xmlFiles, pac
 
 	for _, xmlPath in pairs(xmlFiles) do -- iterate through provided files
 		local root = findXmlElement(parseXmlFile(xmlPath), { 'root' }) -- use first root element
-		for _, element in ipairs(root.children) do
-			if element.tag == 'windowclass' then -- iterate through each windowclass
-				getWindowclassScript(element)
-				local sheetdata = findXmlElement(element, { 'sheetdata' }) -- use first sheetdata element
-				if sheetdata then xmlScriptSearch(sheetdata) end
+		if root and root.children then
+			for _, element in ipairs(root.children) do
+				if element.tag == 'windowclass' then -- iterate through each windowclass
+					getWindowclassScript(element)
+					local sheetdata = findXmlElement(element, { 'sheetdata' }) -- use first sheetdata element
+					if sheetdata then xmlScriptSearch(sheetdata) end
+				end
 			end
+		else
+			print('error at ' .. xmlPath)
 		end
 	end
 end
