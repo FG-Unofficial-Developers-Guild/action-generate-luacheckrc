@@ -1,3 +1,42 @@
+-- Equivalent of the pairs() function on tables. Allows to iterate in order
+function orderedPairs(t)
+	local function orderedNext(t, state)
+	    local key
+	    if not state then
+
+		local function __genOrderedIndex( t )
+		    local orderedIndex = {}
+		    for k in pairs(t) do
+			table.insert( orderedIndex, k )
+		    end
+		    table.sort( orderedIndex )
+		    return orderedIndex
+		end
+
+		-- the first time, generate the index
+		t.__orderedIndex = __genOrderedIndex( t )
+		key = t.__orderedIndex[1]
+	    else
+		-- fetch the next value
+		for i = 1,table.getn(t.__orderedIndex) do
+		    if t.__orderedIndex[i] == state then
+			key = t.__orderedIndex[i+1]
+		    end
+		end
+	    end
+
+	    if key then
+		return key, t[key]
+	    end
+
+	    -- no more value to return, cleanup
+	    t.__orderedIndex = nil
+	    return
+	end
+
+    return orderedNext, t, nil
+end
+
 -- Config
 local dataPath = './.fg/'
 
@@ -44,7 +83,7 @@ destFile:write("'\n")
 
 -- looks through each package type's detected globals
 -- it then appends them to the config file
-for packageName, file in pairs(packageFiles) do
+for packageName, file in orderedPairs(packageFiles) do
 	local stdsName = ('\nstds.' .. packageName .. ' = {\n')
 	destFile:write(stdsName)
 	local fhandle = io.open(file, 'r')
