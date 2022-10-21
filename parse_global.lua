@@ -20,6 +20,45 @@ local packages = {
 -- General Functions (called from multiple places)
 --
 
+-- Equivalent of the pairs() function on tables. Allows to iterate in order
+function orderedPairs(t)
+	local function orderedNext(t, state)
+	    local key
+	    if not state then
+
+		local function __genOrderedIndex( t )
+		    local orderedIndex = {}
+		    for k in pairs(t) do
+			table.insert( orderedIndex, k )
+		    end
+		    table.sort( orderedIndex )
+		    return orderedIndex
+		end
+
+		-- the first time, generate the index
+		t.__orderedIndex = __genOrderedIndex( t )
+		key = t.__orderedIndex[1]
+	    else
+		-- fetch the next value
+		for i = 1,table.getn(t.__orderedIndex) do
+		    if t.__orderedIndex[i] == state then
+			key = t.__orderedIndex[i+1]
+		    end
+		end
+	    end
+
+	    if key then
+		return key, t[key]
+	    end
+
+	    -- no more value to return, cleanup
+	    t.__orderedIndex = nil
+	    return
+	end
+
+    return orderedNext, t, nil
+end
+
 -- Calls luac and find included SETGLOBAL commands
 -- Adds them to supplied table 'globals'
 local function findGlobals(globals, filePath)
@@ -143,7 +182,7 @@ local function writeDefinitionsToFile(defintitions, package, version)
 		-- Rewrite child functions of script/object definitions in format of luacheckrc and return.
 		local function writeSubdefintions(fns)
 			local subdefinition = ''
-			for fn, type in pairs(fns) do
+			for fn, type in orderedPairs(fns) do
 				subdefinition = subdefinition .. '\t\t' .. simpleName(fn) .. ' = {\n\t\t\t\tread_only = false,\n\t\t\t\tother_fields = ' ..
 								                tostring(type == 'table') .. ',\n\t\t\t},\n\t'
 			end
@@ -151,7 +190,7 @@ local function writeDefinitionsToFile(defintitions, package, version)
 			return subdefinition
 		end
 
-		for parent, fns in pairs(defintitions[package]) do
+		for parent, fns in orderedPairs(defintitions[package]) do
 			local simpleParent = simpleName(parent)
 			if simpleParent ~= '' then
 				local global = (simpleName(parent) .. ' = {\n\t\tread_only = false,\n\t\tfields = {\n\t' .. writeSubdefintions(fns) .. '\t},\n\t},')
@@ -216,7 +255,7 @@ local function findInterfaceScripts(packageDefinitions, templates, xmlFiles, pac
 	local function xmlScriptSearch(sheetdata)
 
 		-- Copies keys from sourceTable to destinationTable with boolean value true
-		local function insertTableKeys(sourceTable, destinationTable) for fn, _ in pairs(sourceTable) do destinationTable[fn] = true end end
+		local function insertTableKeys(sourceTable, destinationTable) for fn, _ in orderedPairs(sourceTable) do destinationTable[fn] = true end end
 
 		-- When supplied with a lua-xmlparser table for the <script> element,
 		-- this function adds any functions from it into a supplied table.
@@ -264,7 +303,7 @@ local function findInterfaceScripts(packageDefinitions, templates, xmlFiles, pac
 		end
 	end
 
-	for _, xmlPath in pairs(xmlFiles) do -- iterate through provided files
+	for _, xmlPath in orderedPairs(xmlFiles) do -- iterate through provided files
 		local root = findXmlElement(parseXmlFile(xmlPath), { 'root' }) -- use first root element
 		if root and root.children then
 			for _, element in ipairs(root.children) do
@@ -282,12 +321,12 @@ end
 
 -- Checks each template for other templates it inherits from and copies those functions into the inheriting template.
 local function matchRelationshipScripts(templates)
-	for _, template in pairs(templates) do
+	for _, template in orderedPairs(templates) do
 		local inheritedTemplates = template.inherit
 		if inheritedTemplates then
-			for inherit, _ in pairs(inheritedTemplates) do
+			for inherit, _ in orderedPairs(inheritedTemplates) do
 				if inherit and templates[inherit] and templates[inherit].functions and template.functions then
-					for functionName, _ in pairs(templates[inherit].functions) do template.functions[functionName] = true end
+					for functionName, _ in orderedPairs(templates[inherit].functions) do template.functions[functionName] = true end
 				end
 			end
 		end
@@ -313,7 +352,7 @@ local function findTemplateRelationships(templates, packagePath, xmlFiles)
 		templates[element.attrs.name] = { ['inherit'] = { [parent.tag] = true }, ['functions'] = templateFunctions }
 	end
 
-	for _, xmlPath in pairs(xmlFiles) do
+	for _, xmlPath in orderedPairs(xmlFiles) do
 		local root = findXmlElement(parseXmlFile(xmlPath), { 'root' })
 		if root and root.children then
 			for _, element in ipairs(root.children) do
@@ -433,10 +472,10 @@ local function getAPIfunctions(templates)
 		end
 	end
 
-	for object, data in pairs(apiDefinitions) do
+	for object, data in orderedPairs(apiDefinitions) do
 		setupTemplate(object)
-		for fn, _ in pairs(data.functions) do templates[object].functions[fn] = true end
-		for template, _ in pairs(data.inherit) do templates[object].inherit[template] = true end
+		for fn, _ in orderedPairs(data.functions) do templates[object].functions[fn] = true end
+		for template, _ in orderedPairs(data.inherit) do templates[object].inherit[template] = true end
 	end
 end
 
