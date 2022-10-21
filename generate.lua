@@ -77,7 +77,7 @@ local packageFiles = findPackageFiles(dataPath .. 'globals/')
 
 -- add std config to luachecrc file
 destFile:write("\nstd = '" .. stdBase)
-for packageName, _ in pairs(packageFiles) do destFile:write('+' .. packageName) end
+for packageName, _ in orderedPairs(packageFiles) do destFile:write('+' .. packageName) end
 destFile:write(stdString)
 destFile:write("'\n")
 
