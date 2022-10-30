@@ -62,7 +62,8 @@ jobs:
         title: Update .luacheckrc
         commit-message: "test: update .luacheckrc"
         branch: update-luacheckrc
-        delete-branch: true```
+        delete-branch: true
+```
 
 ## Arguments
 
