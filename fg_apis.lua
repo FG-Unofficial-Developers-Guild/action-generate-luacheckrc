@@ -108,7 +108,7 @@ return {
 		},
 		['inherit'] = {},
 	},
-	['databasenode'] = {
+	--[[['databasenode'] = {
 		['functions'] = {
 			['addChildCategory'] = true,
 			['addHolder'] = true,
@@ -156,7 +156,7 @@ return {
 			['updateChildCategory'] = true,
 			['updateVersion'] = true,
 		},
-		['inherit'] = {},
+		['inherit'] = {},]]
 	},
 	['windowinstance'] = {
 		['functions'] = {
