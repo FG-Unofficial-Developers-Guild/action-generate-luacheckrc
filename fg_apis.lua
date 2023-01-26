@@ -156,8 +156,8 @@ return {
 			['updateChildCategory'] = true,
 			['updateVersion'] = true,
 		},
-		['inherit'] = {},]]
-	},
+		['inherit'] = {},
+	},]]
 	['windowinstance'] = {
 		['functions'] = {
 			['bringToFront'] = true,
