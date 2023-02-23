@@ -1,40 +1,35 @@
 -- Equivalent of the pairs() function on tables. Allows to iterate in order
 function orderedPairs(t)
 	local function orderedNext(t, state)
-	    local key
-	    if not state then
+		local key
+		if not state then
+			local function __genOrderedIndex(t)
+				local orderedIndex = {}
+				for k in pairs(t) do
+					table.insert(orderedIndex, k)
+				end
+				table.sort(orderedIndex)
+				return orderedIndex
+			end
 
-		local function __genOrderedIndex( t )
-		    local orderedIndex = {}
-		    for k in pairs(t) do
-			table.insert( orderedIndex, k )
-		    end
-		    table.sort( orderedIndex )
-		    return orderedIndex
+			-- the first time, generate the index
+			t.__orderedIndex = __genOrderedIndex(t)
+			key = t.__orderedIndex[1]
+		else
+			-- fetch the next value
+			for i = 1, table.getn(t.__orderedIndex) do
+				if t.__orderedIndex[i] == state then key = t.__orderedIndex[i + 1] end
+			end
 		end
 
-		-- the first time, generate the index
-		t.__orderedIndex = __genOrderedIndex( t )
-		key = t.__orderedIndex[1]
-	    else
-		-- fetch the next value
-		for i = 1,table.getn(t.__orderedIndex) do
-		    if t.__orderedIndex[i] == state then
-			key = t.__orderedIndex[i+1]
-		    end
-		end
-	    end
+		if key then return key, t[key] end
 
-	    if key then
-		return key, t[key]
-	    end
-
-	    -- no more value to return, cleanup
-	    t.__orderedIndex = nil
-	    return
+		-- no more value to return, cleanup
+		t.__orderedIndex = nil
+		return
 	end
 
-    return orderedNext, t, nil
+	return orderedNext, t, nil
 end
 
 -- Config
@@ -77,7 +72,9 @@ local packageFiles = findPackageFiles(dataPath .. 'globals/')
 
 -- add std config to luachecrc file
 destFile:write("\nstd = '" .. stdBase)
-for packageName, _ in orderedPairs(packageFiles) do destFile:write('+' .. packageName) end
+for packageName, _ in orderedPairs(packageFiles) do
+	destFile:write('+' .. packageName)
+end
 destFile:write(stdString)
 destFile:write("'\n")
 
@@ -88,7 +85,9 @@ for packageName, file in orderedPairs(packageFiles) do
 	destFile:write(stdsName)
 	local fhandle = io.open(file, 'r')
 	local content = fhandle:read('*a')
-	for line in string.gmatch(content, '[^\r\n]+') do destFile:write('\t' .. line .. '\n') end
+	for line in string.gmatch(content, '[^\r\n]+') do
+		destFile:write('\t' .. line .. '\n')
+	end
 	destFile:write('}\n')
 end
 

@@ -288,8 +288,7 @@ return {
 		},
 		['inherit'] = { ['windowcontrol'] = true },
 	},
-	['tokenbag'] = { ['functions'] = { ['getZoom'] = true, ['setZoom'] = true },
-                  ['inherit'] = { ['windowcontrol'] = true } },
+	['tokenbag'] = { ['functions'] = { ['getZoom'] = true, ['setZoom'] = true }, ['inherit'] = { ['windowcontrol'] = true } },
 	['subwindow'] = {
 		['functions'] = { ['getValue'] = true, ['onInstanceCreated'] = true, ['setValue'] = true },
 		['inherit'] = { ['windowcontrol'] = true },

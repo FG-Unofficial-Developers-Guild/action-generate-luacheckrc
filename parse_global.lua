@@ -23,46 +23,40 @@ local packages = {
 -- Equivalent of the pairs() function on tables. Allows to iterate in order
 function orderedPairs(t)
 	local function orderedNext(t, state)
-	    local key
-	    if not state then
+		local key
+		if not state then
+			local function __genOrderedIndex(t)
+				local orderedIndex = {}
+				for k in pairs(t) do
+					table.insert(orderedIndex, k)
+				end
+				table.sort(orderedIndex)
+				return orderedIndex
+			end
 
-		local function __genOrderedIndex( t )
-		    local orderedIndex = {}
-		    for k in pairs(t) do
-			table.insert( orderedIndex, k )
-		    end
-		    table.sort( orderedIndex )
-		    return orderedIndex
+			-- the first time, generate the index
+			t.__orderedIndex = __genOrderedIndex(t)
+			key = t.__orderedIndex[1]
+		else
+			-- fetch the next value
+			for i = 1, table.getn(t.__orderedIndex) do
+				if t.__orderedIndex[i] == state then key = t.__orderedIndex[i + 1] end
+			end
 		end
 
-		-- the first time, generate the index
-		t.__orderedIndex = __genOrderedIndex( t )
-		key = t.__orderedIndex[1]
-	    else
-		-- fetch the next value
-		for i = 1,table.getn(t.__orderedIndex) do
-		    if t.__orderedIndex[i] == state then
-			key = t.__orderedIndex[i+1]
-		    end
-		end
-	    end
+		if key then return key, t[key] end
 
-	    if key then
-		return key, t[key]
-	    end
-
-	    -- no more value to return, cleanup
-	    t.__orderedIndex = nil
-	    return
+		-- no more value to return, cleanup
+		t.__orderedIndex = nil
+		return
 	end
 
-    return orderedNext, t, nil
+	return orderedNext, t, nil
 end
 
 -- Calls luac and find included SETGLOBAL commands
 -- Adds them to supplied table 'globals'
 local function findGlobals(globals, filePath)
-
 	-- executes a command and returns the result as a string
 	local function executeCapture(command)
 		local file = assert(io.popen(command, 'r'))
@@ -75,28 +69,35 @@ local function findGlobals(globals, filePath)
 	end
 
 	if lfs.touch(filePath) then
-		executeCapture('perl -e \'s/\\xef\\xbb\\xbf//;\' -pi ' .. filePath)
+		executeCapture("perl -e 's/\\xef\\xbb\\xbf//;' -pi " .. filePath)
 		local content = executeCapture(string.format('%s -l -p ' .. filePath, 'luac'))
 
 		-- builds and returns an indexed table of lines from 'content' of parent scope.
 		local function enumerateOutput()
 			local lines = {}
-			for line in content:gmatch('[^\r\n]+') do lines[#lines + 1] = line end
+			for line in content:gmatch('[^\r\n]+') do
+				lines[#lines + 1] = line
+			end
 			return lines
 		end
 
 		-- If lineConent is a match, defines the global and triggers parsing whether to redefine as a table.
 		local function defineGlobal(lines, lineNumber, lineContent)
-
 			-- Checks recursively through lines to find 'NEWTABLE'.
 			-- If not found, but there is still data, it continues to the next line.
 			-- If found, sets globals[globalName] as a table to allow mutating children.
 			local function recursiveFindTable(globalName, prevLine)
 				if lines[prevLine] and lines[prevLine]:match('NEWTABLE%s+') then
 					globals[globalName] = 'table'
-				elseif lines[prevLine] and
-								(lines[prevLine]:match('SETTABLE%s+') or lines[prevLine]:match('SETLIST%s+') or lines[prevLine]:match('LOADK%s+') or
-												lines[prevLine]:match('LOADBOOL%s+')) then
+				elseif
+					lines[prevLine]
+					and (
+						lines[prevLine]:match('SETTABLE%s+')
+						or lines[prevLine]:match('SETLIST%s+')
+						or lines[prevLine]:match('LOADK%s+')
+						or lines[prevLine]:match('LOADBOOL%s+')
+					)
+				then
 					recursiveFindTable(globalName, prevLine - 1)
 				end
 			end
@@ -121,7 +122,9 @@ end
 local function findXmlElement(root, searchStrings)
 	if root and root.children then
 		for _, xmlElement in ipairs(root.children) do
-			for _, searchString in ipairs(searchStrings) do if xmlElement.tag == searchString then return xmlElement end end
+			for _, searchString in ipairs(searchStrings) do
+				if xmlElement.tag == searchString then return xmlElement end
+			end
 		end
 	end
 end
@@ -129,13 +132,12 @@ end
 -- Calls findGlobals for lua functions in XML-formatted string
 -- Creates temp file, writes string to it, calls findGlobals, deletes temp file
 local function getFnsFromLuaInXml(fns, data)
-
 	-- Converts XML escaped strings into the base characters.
 	-- &gt; to >, for example. This allows the lua parser to handle it correctly.
 	local function convertXmlEscapes(string)
 		string = string:gsub('&amp;', '&')
 		string = string:gsub('&quot;', '"')
-		string = string:gsub('&apos;', '\'')
+		string = string:gsub('&apos;', "'")
 		string = string:gsub('&lt;', '<')
 		string = string:gsub('&gt;', '>')
 		return string
@@ -172,10 +174,8 @@ end
 
 -- Write compiled defintions to globals directory for use by generate.lua.
 local function writeDefinitionsToFile(defintitions, package, version)
-
 	-- Rewrite definitions in format of lucheckrc, add to output, and sort output.
 	local function gatherChildFunctions(output)
-
 		-- Change hyphens and whitespace characters in provided string to underscores.
 		local function simpleName(string) return string:gsub('[%-%s]', '_') end
 
@@ -183,8 +183,12 @@ local function writeDefinitionsToFile(defintitions, package, version)
 		local function writeSubdefintions(fns)
 			local subdefinition = ''
 			for fn, type in orderedPairs(fns) do
-				subdefinition = subdefinition .. '\t\t' .. simpleName(fn) .. ' = {\n\t\t\t\tread_only = false,\n\t\t\t\tother_fields = ' ..
-								                tostring(type == 'table') .. ',\n\t\t\t},\n\t'
+				subdefinition = subdefinition
+					.. '\t\t'
+					.. simpleName(fn)
+					.. ' = {\n\t\t\t\tread_only = false,\n\t\t\t\tother_fields = '
+					.. tostring(type == 'table')
+					.. ',\n\t\t\t},\n\t'
 			end
 
 			return subdefinition
@@ -209,7 +213,9 @@ local function writeDefinitionsToFile(defintitions, package, version)
 	local destFile = assert(io.open(filePath, 'w'), 'Error opening file ' .. filePath)
 	-- if version then destFile:write('# ' .. version .. '\n') end
 	destFile:write('globals = {\n')
-	for _, var in ipairs(output) do destFile:write('\t' .. var .. '\n') end
+	for _, var in ipairs(output) do
+		destFile:write('\t' .. var .. '\n')
+	end
 
 	destFile:write('\n},\n')
 	destFile:close()
@@ -217,10 +223,8 @@ end
 
 -- Search through a supplied fantasygrounds xml file to find named lua scripts files.
 local function findNamedLuaScripts(definitions, baseXmlFile, packagePath)
-
 	-- Searches recursively for script tags within provided element.
 	local function recursiveScriptSearch(element)
-
 		-- Calls findGlobals and adds result to defintions keyed to object name.
 		local function callFindGlobals()
 			local fns = {}
@@ -232,13 +236,17 @@ local function findNamedLuaScripts(definitions, baseXmlFile, packagePath)
 		if element.tag == 'script' and element.attrs.file then
 			callFindGlobals()
 		elseif element.children then
-			for _, child in ipairs(element.children) do recursiveScriptSearch(child) end
+			for _, child in ipairs(element.children) do
+				recursiveScriptSearch(child)
+			end
 		end
 	end
 
 	local root = findXmlElement(parseXmlFile(baseXmlFile), { 'root' })
 	if root and root.children then
-		for _, element in ipairs(root.children) do recursiveScriptSearch(element) end
+		for _, element in ipairs(root.children) do
+			recursiveScriptSearch(element)
+		end
 	else
 		print('error at ' .. baseXmlFile)
 	end
@@ -248,14 +256,16 @@ end
 -- If element is windowclass, call getWindowclassScript.
 -- If element is not a template, call xmlScriptSearch
 local function findInterfaceScripts(packageDefinitions, templates, xmlFiles, packagePath)
-
 	-- Checks the first level of the provided xml data table for an element with the
 	-- tag 'script'. If found, it calls getScriptFromXml to map its globals and then calls
 	-- insertTableKeys to add any inherited template functions.
 	local function xmlScriptSearch(sheetdata)
-
 		-- Copies keys from sourceTable to destinationTable with boolean value true
-		local function insertTableKeys(sourceTable, destinationTable) for fn, _ in orderedPairs(sourceTable) do destinationTable[fn] = true end end
+		local function insertTableKeys(sourceTable, destinationTable)
+			for fn, _ in orderedPairs(sourceTable) do
+				destinationTable[fn] = true
+			end
+		end
 
 		-- When supplied with a lua-xmlparser table for the <script> element,
 		-- this function adds any functions from it into a supplied table.
@@ -326,7 +336,9 @@ local function matchRelationshipScripts(templates)
 		if inheritedTemplates then
 			for inherit, _ in orderedPairs(inheritedTemplates) do
 				if inherit and templates[inherit] and templates[inherit].functions and template.functions then
-					for functionName, _ in orderedPairs(templates[inherit].functions) do template.functions[functionName] = true end
+					for functionName, _ in orderedPairs(templates[inherit].functions) do
+						template.functions[functionName] = true
+					end
 				end
 			end
 		end
@@ -336,7 +348,6 @@ end
 -- Finds template definitions in supplied table of XML files.
 -- If found, calls findTemplateScript to extract a list of globals.
 local function findTemplateRelationships(templates, packagePath, xmlFiles)
-
 	-- When supplied with a lua-xmlparser table for the <script> element of a template,
 	-- this function adds any functions from it into a supplied table.
 	local function findTemplateScript(parent, element)
@@ -356,7 +367,11 @@ local function findTemplateRelationships(templates, packagePath, xmlFiles)
 		local root = findXmlElement(parseXmlFile(xmlPath), { 'root' })
 		if root and root.children then
 			for _, element in ipairs(root.children) do
-				if element.tag == 'template' then for _, template in ipairs(element.children) do findTemplateScript(template, element) end end
+				if element.tag == 'template' then
+					for _, template in ipairs(element.children) do
+						findTemplateScript(template, element)
+					end
+				end
 			end
 		else
 			print('error at ' .. xmlPath)
@@ -366,7 +381,6 @@ end
 
 -- Find xml root node and search within for xml file definitions.
 local function findXmls(xmlFiles, xmlDefinitionsPath, packagePath)
-
 	-- Searches recursively for xml file definitions.
 	local function addXmlToTable(element)
 		if element.tag == 'includefile' then
@@ -375,14 +389,20 @@ local function findXmls(xmlFiles, xmlDefinitionsPath, packagePath)
 			xmlFiles[fileName] = table.concat(packagePath) .. '/' .. element.attrs.source
 			return true
 		elseif element.children then
-			for _, child in ipairs(element.children) do addXmlToTable(child) end
+			for _, child in ipairs(element.children) do
+				addXmlToTable(child)
+			end
 		end
 	end
 
 	local root = findXmlElement(parseXmlFile(xmlDefinitionsPath), { 'root' }) -- use first root element
 	if root and root.children then
 		for _, element in ipairs(root.children) do
-			if not addXmlToTable(element) then for _, child in ipairs(element.children) do addXmlToTable(child) end end
+			if not addXmlToTable(element) then
+				for _, child in ipairs(element.children) do
+					addXmlToTable(child)
+				end
+			end
 		end
 	else
 		print('error at ' .. xmlDefinitionsPath)
@@ -406,7 +426,6 @@ local function getPackageName(baseXmlFile, packageName)
 	-- Reads supplied XML file to find name and author definitions.
 	-- Returns a simplified string to identify the extension
 	local function getSimpleName()
-
 		local altName = { '' }
 		local xmlRoot = findXmlElement(parseXmlFile(baseXmlFile), { 'root' })
 		local xmlProperties = findXmlElement(xmlRoot, { 'properties' })
@@ -453,7 +472,9 @@ local function findAllPackages(list, path)
 	lfs.mkdir(path) -- if not found, create path to avoid errors
 
 	for file in lfs.dir(path) do
-		if lfs.attributes(path .. '/' .. file, 'mode') == 'directory' then if file ~= '.' and file ~= '..' then table.insert(list, file) end end
+		if lfs.attributes(path .. '/' .. file, 'mode') == 'directory' then
+			if file ~= '.' and file ~= '..' then table.insert(list, file) end
+		end
 	end
 
 	table.sort(list)
@@ -474,8 +495,12 @@ local function getAPIfunctions(templates)
 
 	for object, data in orderedPairs(apiDefinitions) do
 		setupTemplate(object)
-		for fn, _ in orderedPairs(data.functions) do templates[object].functions[fn] = true end
-		for template, _ in orderedPairs(data.inherit) do templates[object].inherit[template] = true end
+		for fn, _ in orderedPairs(data.functions) do
+			templates[object].functions[fn] = true
+		end
+		for template, _ in orderedPairs(data.inherit) do
+			templates[object].inherit[template] = true
+		end
 	end
 end
 
@@ -520,7 +545,10 @@ for _, packageTypeData in ipairs(packages) do
 
 		print(string.format('Finding interface object scripts and adding appropriate templates for %s.', shortPkgName))
 		findInterfaceScripts(
-						packageTypeData.definitions[shortPkgName], templates, interfaceXmlFiles, { datapath, packageTypeData.name, '/', packageName }
+			packageTypeData.definitions[shortPkgName],
+			templates,
+			interfaceXmlFiles,
+			{ datapath, packageTypeData.name, '/', packageName }
 		)
 
 		print(string.format('Finding named scripts in %s.', shortPkgName))
