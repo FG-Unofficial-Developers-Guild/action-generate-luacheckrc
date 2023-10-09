@@ -553,6 +553,12 @@ for _, packageTypeData in ipairs(packages) do
 
 		print(string.format('Finding named scripts in %s.', shortPkgName))
 		findNamedLuaScripts(packageTypeData.definitions[shortPkgName], baseXmlFile, packagePath)
+		for sFile ,sValue in pairs(interfaceXmlFiles) do
+			-- blows up passing any xml, so just process xmls that contain 'loader'
+			if string.find(sFile, 'loader') then
+				findNamedLuaScripts(packageTypeData.definitions[shortPkgName], sValue, packagePath)
+			end
+		end
 
 		print(string.format('Writing definitions for %s.\n', shortPkgName))
 		writeDefinitionsToFile(packageTypeData.definitions, shortPkgName, version)
