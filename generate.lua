@@ -17,7 +17,8 @@ function orderedPairs(t)
 			key = t.__orderedIndex[1]
 		else
 			-- fetch the next value
-			for i = 1, #t.__orderedIndex do
+			--for i = 1, #t.__orderedIndex do
+			for i = 1, getTableSize(t.__orderedIndex) do
 				if t.__orderedIndex[i] == state then key = t.__orderedIndex[i + 1] end
 			end
 		end
@@ -30,6 +31,14 @@ function orderedPairs(t)
 	end
 
 	return orderedNext, t, nil
+end
+--alternatives are # and rawlen.  Adding this to confirm problem.
+function getTableSize(t)
+    local count = 0;
+    for _ in pairs(t) do
+        count = count + 1;
+    end
+    return count;
 end
 
 -- Config
