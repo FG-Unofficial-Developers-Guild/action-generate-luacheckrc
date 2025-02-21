@@ -18,7 +18,7 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Install Lua 5.1
+    - name: Install Lua 5.4
       uses: leafo/gh-actions-lua@v10
       with:
         luaVersion: "5.4"
