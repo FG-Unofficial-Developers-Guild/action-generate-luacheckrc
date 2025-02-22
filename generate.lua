@@ -17,9 +17,10 @@ function orderedPairs(t)
 			key = t.__orderedIndex[1]
 		else
 			-- fetch the next value
-			for _, value in ipairs(t.__orderedIndex) do
+			for i, value in ipairs(t.__orderedIndex) do
 			    if value == state then
-			        key = t.__orderedIndex[table.indexOf(t.__orderedIndex, value) + 1]
+			        key = t.__orderedIndex[i + 1]
+			        break
 			    end
 			end
 		end
