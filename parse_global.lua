@@ -202,7 +202,7 @@ local function writeDefinitionsToFile(defintitions, package, version)
 			if simpleParent ~= '' && not string.find(simpleParent, "%.") then
 				local global = (simpleName(parent) .. ' = {\n\t\tread_only = false,\n\t\tfields = {\n\t' .. writeSubdefintions(fns) .. '\t},\n\t},')
 				table.insert(output, global)
-			else
+			elseif string.find(simpleParent, "%.") then
 				print(string.format('skipping detection of %s due to format including a dot', simpleParent))
 			end
 		end
