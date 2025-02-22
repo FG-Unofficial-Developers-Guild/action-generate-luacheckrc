@@ -199,7 +199,7 @@ local function writeDefinitionsToFile(defintitions, package, version)
 
 		for parent, fns in orderedPairs(defintitions[package]) do
 			local simpleParent = simpleName(parent)
-			if simpleParent ~= '' && not string.find(simpleParent, "%.") then
+			if simpleParent ~= '' and not string.find(simpleParent, "%.") then
 				local global = (simpleName(parent) .. ' = {\n\t\tread_only = false,\n\t\tfields = {\n\t' .. writeSubdefintions(fns) .. '\t},\n\t},')
 				table.insert(output, global)
 			elseif string.find(simpleParent, "%.") then
