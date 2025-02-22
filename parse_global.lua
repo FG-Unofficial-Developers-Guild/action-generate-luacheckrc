@@ -39,8 +39,11 @@ function orderedPairs(t)
 			key = t.__orderedIndex[1]
 		else
 			-- fetch the next value
-			for i = 1, table.getn(t.__orderedIndex) do
-				if t.__orderedIndex[i] == state then key = t.__orderedIndex[i + 1] end
+			for i, value in ipairs(t.__orderedIndex) do
+			    if value == state then
+			        key = t.__orderedIndex[i + 1]
+			        break
+			    end
 			end
 		end
 
