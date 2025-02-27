@@ -19,12 +19,12 @@ runs:
   using: "composite"
   steps:
     - name: Install Lua 5.4
-      uses: leafo/gh-actions-lua@v10
+      uses: leafo/gh-actions-lua@v11
       with:
         luaVersion: "5.4"
 
     - name: Install Luarocks
-      uses: leafo/gh-actions-luarocks@v4
+      uses: leafo/gh-actions-luarocks@v5
 
     - name: Install LuaFileSystem
       run: luarocks install luafilesystem
