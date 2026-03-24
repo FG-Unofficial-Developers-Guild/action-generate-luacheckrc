@@ -523,16 +523,20 @@ for _, packageTypeData in ipairs(packages) do
 		print(string.format('Found %s. Getting details for template search.', packageName))
 		local packagePath = { datapath, packageTypeData.name, '/', packageName }
 		local baseXmlFile = findBaseXml(packagePath, packageTypeData.baseFile)
-		local shortPkgName, _ = getPackageName(baseXmlFile, packageName)
-
-		print(string.format('Finding interface XML files in %s for template search.', shortPkgName))
-		local interfaceXmlFiles = {}
-		findXmls(interfaceXmlFiles, baseXmlFile, packagePath)
-
-		print(string.format('Determining templates for %s.\n', shortPkgName))
-		findTemplateRelationships(templates, packagePath, interfaceXmlFiles)
-		getAPIfunctions(templates)
-		matchRelationshipScripts(templates)
+		if baseXmlFile then
+			local shortPkgName, _ = getPackageName(baseXmlFile, packageName)
+	
+			print(string.format('Finding interface XML files in %s for template search.', shortPkgName))
+			local interfaceXmlFiles = {}
+			findXmls(interfaceXmlFiles, baseXmlFile, packagePath)
+	
+			print(string.format('Determining templates for %s.\n', shortPkgName))
+			findTemplateRelationships(templates, packagePath, interfaceXmlFiles)
+			getAPIfunctions(templates)
+			matchRelationshipScripts(templates)
+		else
+	        print(string.format('Skipping %s: %s not found.', packageName, packageTypeData.baseFile))
+	    end
 	end
 
 	print('Template search complete; now finding scripts.\n')
@@ -540,32 +544,34 @@ for _, packageTypeData in ipairs(packages) do
 		print(string.format('Found %s. Getting details.', packageName))
 		local packagePath = { datapath, packageTypeData.name, '/', packageName }
 		local baseXmlFile = findBaseXml(packagePath, packageTypeData.baseFile)
-		local shortPkgName, version = getPackageName(baseXmlFile, packageName)
-
-		print(string.format('Finding interface XML files in %s.', shortPkgName))
-		local interfaceXmlFiles = {}
-		findXmls(interfaceXmlFiles, baseXmlFile, packagePath)
-
-		packageTypeData.definitions[shortPkgName] = {}
-
-		print(string.format('Finding interface object scripts and adding appropriate templates for %s.', shortPkgName))
-		findInterfaceScripts(
-			packageTypeData.definitions[shortPkgName],
-			templates,
-			interfaceXmlFiles,
-			{ datapath, packageTypeData.name, '/', packageName }
-		)
-
-		print(string.format('Finding named scripts in %s.', shortPkgName))
-		findNamedLuaScripts(packageTypeData.definitions[shortPkgName], baseXmlFile, packagePath)
-		for sFile ,sValue in pairs(interfaceXmlFiles) do
-			-- blows up passing any xml, so just process xmls that contain 'loader'
-			if string.find(sFile, 'loader') then
-				findNamedLuaScripts(packageTypeData.definitions[shortPkgName], sValue, packagePath)
+		if baseXmlFile then
+			local shortPkgName, version = getPackageName(baseXmlFile, packageName)
+	
+			print(string.format('Finding interface XML files in %s.', shortPkgName))
+			local interfaceXmlFiles = {}
+			findXmls(interfaceXmlFiles, baseXmlFile, packagePath)
+	
+			packageTypeData.definitions[shortPkgName] = {}
+	
+			print(string.format('Finding interface object scripts and adding appropriate templates for %s.', shortPkgName))
+			findInterfaceScripts(
+				packageTypeData.definitions[shortPkgName],
+				templates,
+				interfaceXmlFiles,
+				{ datapath, packageTypeData.name, '/', packageName }
+			)
+	
+			print(string.format('Finding named scripts in %s.', shortPkgName))
+			findNamedLuaScripts(packageTypeData.definitions[shortPkgName], baseXmlFile, packagePath)
+			for sFile ,sValue in pairs(interfaceXmlFiles) do
+				-- blows up passing any xml, so just process xmls that contain 'loader'
+				if string.find(sFile, 'loader') then
+					findNamedLuaScripts(packageTypeData.definitions[shortPkgName], sValue, packagePath)
+				end
 			end
+	
+			print(string.format('Writing definitions for %s.\n', shortPkgName))
+			writeDefinitionsToFile(packageTypeData.definitions, shortPkgName, version)
 		end
-
-		print(string.format('Writing definitions for %s.\n', shortPkgName))
-		writeDefinitionsToFile(packageTypeData.definitions, shortPkgName, version)
 	end
 end
