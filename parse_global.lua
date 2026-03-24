@@ -535,7 +535,7 @@ for _, packageTypeData in ipairs(packages) do
 			getAPIfunctions(templates)
 			matchRelationshipScripts(templates)
 		else
-	        print(string.format('Skipping %s: %s not found.', packageName, packageTypeData.baseFile))
+	        print(string.format('Skipping %s: %s not found.\n', packageName, packageTypeData.baseFile))
 	    end
 	end
 
