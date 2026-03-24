@@ -421,11 +421,11 @@ local function getPackageName(baseXmlFile, packageName)
 
 	-- Trims package name to prevent issues with luacheckrc
 	local function simplifyText(text)
-		text = text:gsub('%a+:%s+', '') -- remove "Feature: ", "Theme: ", etc
-		text = text:gsub("'", '') -- remove apostophes
-		text = text:gsub('[^%w%s].*', '') -- remove non alphanumeric and any following characters
-		text = text:gsub('%W', '') -- remove non alphanumeric
-		return text
+		text = text:gsub('^%a+:%s*', '') -- Remove prefix like "Feature: "
+	    text = text:gsub('%b()', '') -- Remove parentheses and everything inside them
+	    text = text:gsub("'", '') -- Remove apostrophes
+	    text = text:gsub('%W', '') -- Remove all non-alphanumeric characters
+	    return text
 	end
 
 	-- Reads supplied XML file to find name and author definitions.
