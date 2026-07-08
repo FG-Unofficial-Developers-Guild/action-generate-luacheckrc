@@ -20,12 +20,12 @@ jobs:
     runs-on: ubuntu-latest
     name: generate new .luacheckrc
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v7
       with:
         fetch-depth: 0
 
     - name: Clone FG-Unofficial-Developers-Guild/CoreRPG
-      uses: actions/checkout@v3
+      uses: actions/checkout@v7
       with:
         repository: FG-Unofficial-Developers-Guild/CoreRPG
         # Getting FG code into your action working directory is up to you. This repo is not accessible.
@@ -33,7 +33,7 @@ jobs:
         fetch-depth: 0
 
     - name: Clone FG-Unofficial-Developers-Guild/5E
-      uses: actions/checkout@v3
+      uses: actions/checkout@v7
       with:
         repository: FG-Unofficial-Developers-Guild/5E
         # The ruleset folder in the file path cannot begin with a number or special character.
@@ -41,7 +41,7 @@ jobs:
         fetch-depth: 0
 
     - name: Clone bmos/FG-CoreRPG-Coins-Weight
-      uses: actions/checkout@v3
+      uses: actions/checkout@v7
       with:
         repository: bmos/FG-CoreRPG-Coins-Weight
         # The extension folder in the file path cannot begin with a number or special character.
@@ -57,7 +57,7 @@ jobs:
         header-path: '.luacheckrc_header'
 
     - name: Create pull request
-      uses: peter-evans/create-pull-request@v4
+      uses: peter-evans/create-pull-request@v8
       with:
         title: Update .luacheckrc
         commit-message: "test: update .luacheckrc"
